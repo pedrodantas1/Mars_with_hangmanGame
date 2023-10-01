@@ -146,6 +146,8 @@
 			# Incrementa ponteiro da palavra
 			addi $t0, $t0, 1
 
+			j loop_vfj
+
 		fim_vfj:
 			jr $ra
 	
