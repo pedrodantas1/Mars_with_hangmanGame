@@ -1,0 +1,9 @@
+.data
+	lacunas: .asciiz "_______"
+	text: .asciiz "Digite uma letra: "
+	caractere: .space 1
+	
+.text
+	lui $t1, 0x1001
+	addi $s0, $zero, 100
+	sw $s0, 0($t1)
