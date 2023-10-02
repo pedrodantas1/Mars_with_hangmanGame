@@ -56,9 +56,9 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	private static int displayWidth = 650;
 	private static int displayHeight = 350;
 
-	public static final int CARREGANDO_PALAVRA = 67;
-	public static final int JOGO_EM_EXECUCAO = 69;
-	public static final int FIM_DE_JOGO = 70;
+	public static final int CARREGANDO_PALAVRA = 1;
+	public static final int JOGO_EM_EXECUCAO = 2;
+	public static final int FIM_DE_JOGO = 3;
 
 	protected Graphics g;
 	private JPanel canvas;
@@ -69,7 +69,8 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 
 	private int baseAddress;
 	private String statusAddress;
-	private String palavra;
+	private String secretWord;
+	private String secretMask;
 	private int statusGame;
 
 	/**
@@ -128,10 +129,10 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	protected void processMIPSUpdate(Observable resource, AccessNotice notice) {
 		if (!notice.accessIsFromMIPS())
 			return;
-		//Para comando de escrita em registrador
 		MemoryAccessNotice info = (MemoryAccessNotice) notice;
 		int address = info.getAddress();
 		int value = info.getValue();
+		//Para comando de escrita em registrador
 		if (notice.getAccessType() == AccessNotice.WRITE) {
 			// if (Character.isValidCodePoint(value))
 			// 	System.out.println("write: " + address + " : " + Character.toString(value));
@@ -143,7 +144,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			}
 			//Executar comando de acordo com o status do jogo
 			if (statusGame == CARREGANDO_PALAVRA){
-				loadWord(info);
+				loadWordMask(info);
 			}else if (statusGame == JOGO_EM_EXECUCAO){
 				String currentAddress = Integer.toHexString(baseAddress);
 				String end16MSB = currentAddress.substring(0, 4);
@@ -153,43 +154,53 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			}else if (statusGame == FIM_DE_JOGO){
 
 			}
-		}else{
-			// if (Character.isValidCodePoint(value))
-			// 	System.out.println("load:  " + address + " : " + Character.toString(value));
+		}else{  //Para comando de leitura em registrador
+			if (statusGame == CARREGANDO_PALAVRA){
+				loadSecretWord(info);
+			}
 		}
 	}
 
 	void updateGameStatus(int value){
-		if (value != CARREGANDO_PALAVRA &&
-			value != JOGO_EM_EXECUCAO &&
-			value != FIM_DE_JOGO){
+		if (value != CARREGANDO_PALAVRA && value != JOGO_EM_EXECUCAO && value != FIM_DE_JOGO)
 			return;
-		}
 		statusGame = value;
+	}
+
+	/**
+	 * Carregar máscara da palavra secreta quando inicia o jogo
+	 */
+	void loadWordMask(MemoryAccessNotice notice) {
+		if (secretMask == null){
+			secretMask = "";
+		}
+		int value = notice.getValue();
+		if (value != 0){
+			secretMask += Character.toString(value);
+		}
 	}
 
 	/**
 	 * Carregar palavra secreta quando inicia o jogo
 	 */
-	void loadWord(MemoryAccessNotice notice) {
-		if (palavra == null){
-			palavra = "";
+	void loadSecretWord(MemoryAccessNotice notice) {
+		if (secretWord == null){
+			secretWord = "";
 		}
 		int value = notice.getValue();
 		if (value != 0){
-			palavra += Character.toString(value);
+			secretWord += Character.toString(value);
 		}
 	}
 
 	void updateGame(MemoryAccessNotice notice) {
 		int address = notice.getAddress();
-		int value = notice.getValue();
 		int offset = address - baseAddress;
 		//Substituir letra na posição
-		char[] arr = palavra.toCharArray();
-		arr[offset] = (char) value;
-		palavra = new String(arr);
-		//System.out.println(palavra);
+		char[] arr = secretMask.toCharArray();
+		arr[offset] = secretWord.charAt(offset);
+		secretMask = new String(arr);
+		//System.out.println(secretMask);
 	}
 
 	protected void updateDisplay() {
@@ -204,7 +215,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	// 	Font font = new Font("Verdana", Font.PLAIN, 20);
 	// 	g.setFont(font);
 	// 	g.setColor(Color.blue);
-	// 	g.drawString(palavra, size.width / 2, size.height / 2);
+	// 	g.drawString(secretMask, size.width / 2, size.height / 2);
 	// }
 
 	protected void initializePostGUI() {
@@ -212,7 +223,8 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	}
 
 	protected void reset() {
-		palavra = "";
+		secretMask = "";
+		secretWord = "";
 		//resetar o background
 		updateDisplay();
 	}
@@ -237,7 +249,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			//BG
 			paintBackground(g);
 			//Texto
-			if (palavra != null)
+			if (secretMask != null)
 				paintText(g);
 		}
 
@@ -255,9 +267,9 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			g.setFont(font);
 			g.setColor(Color.blue);
 			String word = "";
-			for (int i=0; i<palavra.length(); i++){
-				word += palavra.charAt(i);
-				if (i != palavra.length()-1){
+			for (int i=0; i<secretMask.length(); i++){
+				word += secretMask.charAt(i);
+				if (i != secretMask.length()-1){
 					word += " ";
 				}
 			}

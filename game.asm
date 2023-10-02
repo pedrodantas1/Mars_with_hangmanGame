@@ -8,7 +8,6 @@
 	pula_linha: .asciiz "\n"
 
 	palavra_secreta: .asciiz "Estados Unidos"
-	status: .asciiz "CEF"
 
 	# Variáveis
 	# Palavra secreta = $s6
@@ -23,10 +22,6 @@
 	# Endereço de memoria base para o status do game
 	li $s4, 0x10010500
 	
-	# Flag de carregar palavra
-	la $t0, status
-	lb $t1, 0($t0)
-	sb $t1, 0($s4)
 	# Iniciar contador do tamanho da palavra
 	li $s5, 0
 
@@ -34,6 +29,9 @@
 	la $s6, palavra_secreta
 	jal carregar_palavra_secreta
 
+	# Flag de carregar palavra
+	li $t1, 1
+	sw $t1, 0($s4)
 	# Definir lacunas da palavra secreta
 	# Copiar palavra para $t1
 	move $t1, $s6
@@ -41,16 +39,14 @@
 
 	# Iniciar jogo
 	# Flag de inicio de jogo
-	la $t0, status
-	lb $t1, 1($t0)
-	sb $t1, 0($s4)
+	li $t1, 2
+	sw $t1, 0($s4)
 	jal iniciar_jogo
 
 	# Finalizar jogo
 	# Flag de fim de jogo
-	la $t0, status
-	lb $t1, 2($t0)
-	sb $t1, 0($s4)
+	li $t1, 3
+	sw $t1, 0($s4)
 	jal finalizar_jogo
 
 	jal fim_programa
