@@ -133,7 +133,8 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 		int address = info.getAddress();
 		int value = info.getValue();
 		if (notice.getAccessType() == AccessNotice.WRITE) {
-			System.out.println("write: " + address + " : " + Character.toString(value));
+			// if (Character.isValidCodePoint(value))
+			// 	System.out.println("write: " + address + " : " + Character.toString(value));
 			String end = Integer.toHexString(address);
 			//Se atualizar status no endereço designado
 			if (end.equals(statusAddress)){
@@ -144,12 +145,13 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			if (statusGame == CARREGANDO_PALAVRA){
 				loadWord(info);
 			}else if (statusGame == JOGO_EM_EXECUCAO){
-
+				
 			}else if (statusGame == FIM_DE_JOGO){
 
 			}
 		}else{
-			System.out.println("load:  " + address + " : " + Character.toString(value));
+			// if (Character.isValidCodePoint(value))
+			// 	System.out.println("load:  " + address + " : " + Character.toString(value));
 		}
 	}
 

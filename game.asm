@@ -1,26 +1,26 @@
 .data
 	m_pede_letra: .asciiz "Digite uma letra = "
-	m_entrada_invalida: .asciiz "Entrada inv√°lida.\n"
+	m_entrada_invalida: .asciiz "Entrada inv·lida.\n"
 	m_letra_certa: .asciiz "Muito bem! Letra correta.\n"
-	m_letra_errada: .asciiz "Ops! A palavra n√£o cont√©m essa letra.\n"
+	m_letra_errada: .asciiz "Ops! A palavra n„o contÈm essa letra.\n"
 	m_deu_forca: .asciiz "Que pena! Deu forca e a palavra secreta era: "
-	m_acertou_palavra: .asciiz "Parab√©ns! Voc√™ acertou a palavra secreta.\n"
+	m_acertou_palavra: .asciiz "ParabÈns! VocÍ acertou a palavra secreta.\n"
 	pula_linha: .asciiz "\n"
 
 	palavra_secreta: .asciiz "Estados Unidos"
 	status: .asciiz "CEF"
 
-	# Vari√°veis
+	# Vari·veis
 	# Palavra secreta = $s6
-	# Palavra in-game (PIG) = $s0 -> endere√ßo 0x10000000
+	# Palavra in-game (PIG) = $s0 -> endereÁo 0x10000000
 	# Tamanho da palavra = $s5
-	# Status do game = $s4 -> endere√ßo 0x10010500
+	# Status do game = $s4 -> endereÁo 0x10010500
 	# Contador de erros = $s3
 	
 .text
-	# Endere√ßo de memoria base para o jogo
+	# EndereÁo de memoria base para o jogo
 	lui $s0, 0x1000
-	# Endere√ßo de memoria base para o status do game
+	# EndereÁo de memoria base para o status do game
 	li $s4, 0x10010500
 	
 	# Flag de carregar palavra
@@ -70,15 +70,15 @@
 			jr $ra
 	
 	criar_mascara_palavra:
-		# Carrega o caractere da posi√ß√£o atual da palavra em $t2
+		# Carrega o caractere da posiÁ„o atual da palavra em $t2
 		lb $t2, 0($t1)
 		beqz $t2, fim_cmp
 
-		# Compara√ß√µes
+		# ComparaÁıes
 		li $t3, 45    #Caratere '-'
 		beq $t2, $t3, copiar_caractere
 
-		li $t3, 32    #Caratere espa√ßo
+		li $t3, 32    #Caratere espaÁo
 		beq $t2, $t3, copiar_caractere
 
 		li $t2, 95    #Caratere '_'
@@ -161,11 +161,11 @@
 		move $t0, $s0
 		li $t2, 95    #Caratere '_'
 		loop_vfj:
-			# Se n√£o houver nenhum '_' na palavra, finaliza o jogo
+			# Se n„o houver nenhum '_' na palavra, finaliza o jogo
 			lb $t1, 0($t0)
 			beqz $t1, fim_loop_jogo
 
-			# Verifica se √© igual a '_'
+			# Verifica se È igual a '_'
 			beq $t1, $t2, fim_vfj
 
 			# Incrementa ponteiro da palavra
@@ -178,21 +178,21 @@
 	
 	# Caractere digitado = $t0
 	validar_entrada:
-		# Se valor do caractere estiver entre 65 e 90 (letras mai√∫sculas)
+		# Se valor do caractere estiver entre 65 e 90 (letras mai˙sculas)
 		blt $t0, 65, entrada_invalida
 		ble $t0, 90, fim_ve
 
-		# Se valor do caractere estiver entre 97 e 122 (letras min√∫sculas)
+		# Se valor do caractere estiver entre 97 e 122 (letras min˙sculas)
 		blt $t0, 97, entrada_invalida
 		bgt $t0, 122, entrada_invalida
 		
 		fim_ve:
-			# Converter para min√∫sculo se necess√°rio
-			# Se n√£o for mai√∫sculo, n√£o precisa fazer nada
+			# Converter para min˙sculo se necess·rio
+			# Se n„o for mai˙sculo, n„o precisa fazer nada
 			blt $t0, 65, fim_conversao
 			bgt $t0, 90, fim_conversao
 
-			# Caso contr√°rio, converter para min√∫sculo
+			# Caso contr·rio, converter para min˙sculo
 			addi $t0, $t0, 32
 
 			fim_conversao:
@@ -206,11 +206,11 @@
 	
 	# Caractere = $t0
 	# converte_em_minusculo:
-	# 	# Se n√£o for mai√∫sculo, n√£o precisa fazer nada
+	# 	# Se n„o for mai˙sculo, n„o precisa fazer nada
 	# 	blt $t0, 65, fim_cem
 	# 	bgt $t0, 90, fim_cem
 
-	# 	# Caso contr√°rio, converter para min√∫sculo
+	# 	# Caso contr·rio, converter para min˙sculo
 	# 	addi $t0, $t0, 32
 
 	# 	fim_cem:
@@ -223,11 +223,11 @@
 		lb $t2, 0($t1)
 		beqz $t2, inicio_nao_contem_letra
 
-		# Converter para min√∫sculo se necess√°rio
-		# Se n√£o for mai√∫sculo, n√£o precisa fazer nada
+		# Converter para min˙sculo se necess·rio
+		# Se n„o for mai˙sculo, n„o precisa fazer nada
 		bgt $t2, 90, pula_conversao
 
-		# Caso contr√°rio, converter para min√∫sculo
+		# Caso contr·rio, converter para min˙sculo
 		addi $t2, $t2, 32
 
 		pula_conversao:
@@ -254,22 +254,22 @@
 			lb $t4, 0($t1)
 			beqz $t3, fim_atualizar_PIG
 
-			# Converter para min√∫sculo se necess√°rio
+			# Converter para min˙sculo se necess·rio
 			bgt $t3, 90, pula_conversao_2
-			# Caso contr√°rio, converter para min√∫sculo
+			# Caso contr·rio, converter para min˙sculo
 			addi $t3, $t3, 32
 
 			pula_conversao_2:
-			# Se caractere da PIG na posi√ßao $t4 != '_'
+			# Se caractere da PIG na posiÁao $t4 != '_'
 			bne $t4, 95, continuar_atualizar_PIG
 			# Se caractere digitado != caractere na posicao $t3
 			bne $t0, $t3, continuar_atualizar_PIG
 
-			# Caso contr√°rio atribuir o caractere digitado em PIG[$t5]
-			# Calcular endere√ßo de memoria da posicao especifica da PIG
+			# Caso contr·rio atribuir o caractere digitado em PIG[$t5]
+			# Calcular endereÁo de memoria da posicao especifica da PIG
 			add $t7, $t6, $t5    # $t7 = endPIG + offset em bytes
 
-			# Atribui√ß√£o
+			# AtribuiÁ„o
 			sb $t0, 0($t7)
 
 			continuar_atualizar_PIG:
@@ -291,8 +291,8 @@
 		# Se erros == 6, ir para o bloco da derrota
 		beq $s3, 6, bloco_derrota
 
-		# Caso contr√°rio, executar bloco da vit√≥ria
-		# Mensagem de vit√≥ria
+		# Caso contr·rio, executar bloco da vitÛria
+		# Mensagem de vitÛria
 		la $a0, m_acertou_palavra
 		j fim_fj
 
