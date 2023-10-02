@@ -145,7 +145,11 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			if (statusGame == CARREGANDO_PALAVRA){
 				loadWord(info);
 			}else if (statusGame == JOGO_EM_EXECUCAO){
-				
+				String currentAddress = Integer.toHexString(baseAddress);
+				String end16MSB = currentAddress.substring(0, 4);
+				if (end.substring(0, 4).equals(end16MSB)){
+					updateGame(info);
+				}
 			}else if (statusGame == FIM_DE_JOGO){
 
 			}
@@ -178,15 +182,14 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	}
 
 	void updateGame(MemoryAccessNotice notice) {
-		if (palavra == null) return;
 		int address = notice.getAddress();
 		int value = notice.getValue();
-		int offset = (address - baseAddress) / Memory.WORD_LENGTH_BYTES;
-		//Substituir letra na posicao
+		int offset = address - baseAddress;
+		//Substituir letra na posição
 		char[] arr = palavra.toCharArray();
-		arr[offset] = (char) (value + '0');
+		arr[offset] = (char) value;
 		palavra = new String(arr);
-		System.out.println(palavra);
+		//System.out.println(palavra);
 	}
 
 	protected void updateDisplay() {
