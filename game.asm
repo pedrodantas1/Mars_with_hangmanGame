@@ -1,15 +1,14 @@
 .data
 	m_pede_letra: .asciiz "Digite uma letra = "
 	m_entrada_invalida: .asciiz "Entrada inválida.\n"
-	m_letra_certa: .asciiz "Muito bem!"
-	m_letra_errada: .asciiz "A palavra não contêm essa letra."
-	m_deu_forca: .asciiz "Que pena! Deu forca e a palavra secreta era X"
-	m_acertou_palavra: .asciiz "Parabéns! Você acertou a palavra secreta."
+	m_letra_certa: .asciiz "Muito bem! Letra correta.\n"
+	m_letra_errada: .asciiz "Ops! A palavra não contém essa letra.\n"
+	m_deu_forca: .asciiz "Que pena! Deu forca e a palavra secreta era: "
+	m_acertou_palavra: .asciiz "Parabéns! Você acertou a palavra secreta.\n"
+	pula_linha: .asciiz "\n"
+
 
 	palavra_secreta: .asciiz "Estados Unidos"
-	
-
-	pula_linha: .asciiz "\n"
 	status: .asciiz "CEF"
 
 
@@ -47,6 +46,13 @@
 	lb $t1, 1($t0)
 	sb $t1, 0($s4)
 	jal iniciar_jogo
+
+	# Finalizar jogo
+	# Flag de fim de jogo
+	la $t0, status
+	lb $t1, 2($t0)
+	sb $t1, 0($s4)
+	jal finalizar_jogo
 
 
 	jal fim_programa
@@ -93,12 +99,13 @@
 			jr $ra
 	
 	# Variáveis
-	# Contador de erros = $t7
+	# Contador de erros = $s3
 	iniciar_jogo:
 		# Iniciar contador de erros
-		li $t7, 0
+		li $s3, 0
 
 		loop_jogo:
+			# Verificar se o jogo finalizou
 			jal verificar_fim_jogo
 			# Solicitar letra
 			inicio_solicitar_letra:
@@ -116,13 +123,19 @@
 			jal verificar_contem_letra
 
 			inicio_contem_letra:
+				jal print_nova_linha
 				# Mensagem de letra correta
-				# Atualiza PIG
+				la $a0, m_letra_certa
+				jal print_string
+				# Atualizar PIG
+				move $t1, $s0
+				move $t2, $s6
+				jal atualizar_PIG
 			
 			inicio_nao_contem_letra:
-				# Incrementa contador de erros
+				# Incrementar contador de erros
 				# Mensagem de letra errada
-				# Atualiza boneco da forca
+				# Atualizar boneco da forca
 
 			j loop_jogo
 
@@ -131,7 +144,7 @@
 	
 	verificar_fim_jogo:
 		# Se erros == 6, finaliza o jogo
-		beq $t7, 6, fim_loop_jogo
+		beq $s3, 6, fim_loop_jogo
 		# Copiar a PIG para $t0
 		move $t0, $s0
 		li $t2, 95    #Caratere '_'
@@ -186,7 +199,7 @@
 	# 	bgt $t0, 90, fim_cem
 
 	# 	# Caso contrário, converter para minúsculo
-	# 	subi $t0, $t0, 32
+	# 	addi $t0, $t0, 32
 
 	# 	fim_cem:
 	# 		jr $ra
@@ -213,6 +226,57 @@
 		addi $t1, $t1, 1
 
 		j verificar_contem_letra
+	
+	# Caractere digitado = $t0
+	# PIG = $t1
+	# Palavra secreta = $t2
+	atualizar_PIG:
+		# Contador = $t5
+		li $t5, 0
+		# Guardar inicio da PIG = $t6
+		move $t6, $t1
+		loop_atualizar_PIG:
+			# Ponteiro para varrer a palavra secreta = $t3
+			lb $t3, 0($t2)
+			# Ponteiro para varrer a PIG = $t4
+			lb $t4, 0($t1)
+			beqz $t3, fim_atualizar_PIG
+
+			# Converter para minúsculo se necessário
+			bgt $t3, 90, pula_conversao_2
+			# Caso contrário, converter para minúsculo
+			addi $t3, $t3, 32
+
+			pula_conversao_2:
+			# Se caractere da PIG na posiçao $t4 != '_'
+			bne $t4, 95, continuar_atualizar_PIG
+			# Se caractere digitado != caractere na posicao $t3
+			bne $t0, $t3, continuar_atualizar_PIG
+
+			# Caso contrário atribuir o caractere digitado em PIG[$t5]
+			# Calcular endereço de memoria da posicao especifica da PIG
+			add $t7, $t6, $t5    # $t7 = endPIG + offset em bytes
+
+			# Atribuição
+			sb $t0, 0($t7)
+
+			continuar_atualizar_PIG:
+			# Incrementa ponteiro da palavra secreta
+			addi $t2, $t2, 1
+			# Incrementa ponteiro da PIG
+			addi $t1, $t1, 1
+			# Incrementa contador
+			addi $t5, $t5, 1
+
+			j loop_atualizar_PIG
+	
+		fim_atualizar_PIG:
+			jr $ra
+	
+	finalizar_jogo:
+		# Se erros < 6, printar mensagem de vencedor
+
+		# Caso contrário, printar mensagem de perdedor
 	
 	fim_programa:
 		li $v0, 10
