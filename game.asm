@@ -7,16 +7,15 @@
 	m_acertou_palavra: .asciiz "Parabéns! Você acertou a palavra secreta.\n"
 	pula_linha: .asciiz "\n"
 
-
 	palavra_secreta: .asciiz "Estados Unidos"
 	status: .asciiz "CEF"
 
-
-	# variaveis
-	# palavra secreta = $s6
-	# PIG = $s0 -> endereço 0x10000000
-	# tamanho da palavra = $s5
-	# status do game = $s4 -> endereço 0x10010500
+	# Variáveis
+	# Palavra secreta = $s6
+	# Palavra in-game (PIG) = $s0 -> endereço 0x10000000
+	# Tamanho da palavra = $s5
+	# Status do game = $s4 -> endereço 0x10010500
+	# Contador de erros = $s3
 	
 .text
 	# Endereço de memoria base para o jogo
@@ -53,7 +52,6 @@
 	lb $t1, 2($t0)
 	sb $t1, 0($s4)
 	jal finalizar_jogo
-
 
 	jal fim_programa
 
@@ -98,9 +96,12 @@
 			sub $s0, $s0, $s5
 			jr $ra
 	
-	# Variáveis
 	# Contador de erros = $s3
 	iniciar_jogo:
+		# Salvar $ra na pilha
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+
 		# Iniciar contador de erros
 		li $s3, 0
 
@@ -123,23 +124,34 @@
 			jal verificar_contem_letra
 
 			inicio_contem_letra:
-				jal print_nova_linha
 				# Mensagem de letra correta
+				jal print_nova_linha
 				la $a0, m_letra_certa
 				jal print_string
 				# Atualizar PIG
 				move $t1, $s0
 				move $t2, $s6
 				jal atualizar_PIG
+				j final_bloco
 			
 			inicio_nao_contem_letra:
 				# Incrementar contador de erros
+				addi $s3, $s3, 1
 				# Mensagem de letra errada
+				jal print_nova_linha
+				la $a0, m_letra_errada
+				jal print_string
 				# Atualizar boneco da forca
 
-			j loop_jogo
+				j final_bloco
+
+			final_bloco:
+				j loop_jogo
 
 			fim_loop_jogo:
+				# Ler $ra da pilha
+				lw $ra, 0($sp)
+				addi $sp, $sp, 4
 				jr $ra
 	
 	verificar_fim_jogo:
@@ -273,10 +285,26 @@
 		fim_atualizar_PIG:
 			jr $ra
 	
+	# Contador de erros = $s3
 	finalizar_jogo:
-		# Se erros < 6, printar mensagem de vencedor
+		jal print_nova_linha
+		# Se erros == 6, ir para o bloco da derrota
+		beq $s3, 6, bloco_derrota
 
-		# Caso contrário, printar mensagem de perdedor
+		# Caso contrário, executar bloco da vitória
+		# Mensagem de vitória
+		la $a0, m_acertou_palavra
+		j fim_fj
+
+		bloco_derrota:
+			# Mensagem de derrota
+			la $a0, m_deu_forca
+			jal print_string
+			la $a0, 0($s6)
+		
+		fim_fj:
+			jal print_string
+			jr $ra
 	
 	fim_programa:
 		li $v0, 10
