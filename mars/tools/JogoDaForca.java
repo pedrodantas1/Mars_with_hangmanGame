@@ -4,7 +4,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
 import java.util.Observable;
 
 import javax.swing.ImageIcon;
@@ -49,7 +51,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 public class JogoDaForca extends AbstractMarsToolAndApplication {
 	private static String heading = "Jogo da Forca";
-	private static String version = " Version 1.0";
+	private static String version = " V1.0";
 	private static int displayWidth = 650;
 	private static int displayHeight = 350;
 
@@ -58,20 +60,16 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	public static final int JOGO_EM_EXECUCAO = 2;
 	public static final int FIM_DE_JOGO = 3;
 
-	protected Graphics g;
 	private JPanel canvas;
-	protected int lastAddress = -1;
-	// protected JLabel label;
-	// private Container painel = this.getContentPane();
-	// private GraphicsConfiguration gc;
+	private String imgForca;
 
 	private String baseAddress;
 	private String statusAddress;
 	private String errorsAddress;
+
 	private String secretWord;
 	private String secretMask;
 	private int statusGame;
-	private String imgForca;
 
 	/**
 	 * Simple constructor, likely used to run a stand-alone memory reference
@@ -89,7 +87,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	 * Simple constructor, likely used by the MARS Tools menu mechanism
 	 */
 	public JogoDaForca() {
-		super(heading + ", " + version, heading);
+		super(heading + version, heading);
 	}
 
 	/**
@@ -102,7 +100,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	 * is no driver program to invoke the application.
 	 */
 	public static void main(String[] args) {
-		new JogoDaForca(heading + ", " + version, heading).go();
+		new JogoDaForca(heading + version, heading).go();
 	}
 
 	/**
@@ -134,8 +132,6 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 		int value = info.getValue();
 		//Para comando de escrita em registrador
 		if (notice.getAccessType() == AccessNotice.WRITE) {
-			// if (Character.isValidCodePoint(value))
-			// 	System.out.println("write: " + address + " : " + Character.toString(value));
 			String end = Integer.toHexString(address);
 			//Se atualizar status no endereço designado
 			if (end.equals(statusAddress)){
@@ -201,23 +197,11 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 		char[] arr = secretMask.toCharArray();
 		arr[offset] = secretWord.charAt(offset);
 		secretMask = new String(arr);
-		//System.out.println(secretMask);
 	}
 
 	protected void updateDisplay() {
 		canvas.repaint();
 	}
-
-	// public void paint(Graphics g) {
-	// 	super.paint(g);
-	// 	Graphics2D g2 = (Graphics2D) g;
-	// 	Dimension size = getSize();
-	// 	FontRenderContext frc = g2.getFontRenderContext();
-	// 	Font font = new Font("Verdana", Font.PLAIN, 20);
-	// 	g.setFont(font);
-	// 	g.setColor(Color.blue);
-	// 	g.drawString(secretMask, size.width / 2, size.height / 2);
-	// }
 
 	protected void initializePostGUI() {
 		updateDefaultAddress();
@@ -251,26 +235,33 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 
 	private class GraphicsPanel extends JPanel {
 		public void paint(Graphics g) {
-			//BG
-			paintBackground(g);
-			//Texto
+			var g2d = (Graphics2D) g;
+			var rh = new RenderingHints(
+					RenderingHints.KEY_ANTIALIASING,
+					RenderingHints.VALUE_ANTIALIAS_ON);
+			rh.put(RenderingHints.KEY_RENDERING,
+					RenderingHints.VALUE_RENDER_QUALITY);
+			g2d.setRenderingHints(rh);
+
+			//Desenhar background do jogo
+			paintBackground(g2d);
+			//Desenhar textos do jogo
 			if (secretMask != null)
-				paintText(g);
+				paintText(g2d);
 		}
 
-		private void paintBackground(Graphics g){
+		private void paintBackground(Graphics2D g2d){
 			System.setProperty("sun.java2d.translaccel", "true");
-			ImageIcon icon = new ImageIcon(getClass().getResource(Globals.imagesPath + imgForca));
-			Image im = icon.getImage();
+			Image img = new ImageIcon(getClass().getResource(Globals.imagesPath + imgForca)).getImage();
 			Dimension size = getSize();
-			g.drawImage(im, 0, 0, size.width, size.height, null);
+			g2d.drawImage(img, 0, 0, size.width, size.height, null);
 		}
 
-		private void paintText(Graphics g){
+		private void paintText(Graphics2D g2d){
 			Dimension size = getSize();
 			Font font = new Font("Verdana", Font.BOLD, 24);
-			g.setFont(font);
-			g.setColor(Color.blue);
+			g2d.setFont(font);
+			g2d.setColor(Color.blue);
 			String word = "";
 			for (int i=0; i<secretMask.length(); i++){
 				word += secretMask.charAt(i);
@@ -278,16 +269,16 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 					word += " ";
 				}
 			}
-			g.drawString(word, (size.width/2)-70, size.height/2);
+			g2d.drawString(word, (size.width/2)-70, size.height/2);
 			
 			if (statusGame == FIM_DE_JOGO){
-				g.setFont(new Font("Verdana", Font.BOLD, 18));
+				g2d.setFont(new Font("Verdana", Font.BOLD, 18));
 				if (secretWord.equals(secretMask)){  //Jogador venceu
-					g.setColor(Color.green);
-					g.drawString("Parabéns! Você acertou a palavra secreta", 20, size.height-20);
+					g2d.setColor(Color.green);
+					g2d.drawString("Parabéns! Você acertou a palavra secreta", 20, size.height-20);
 				}else{  //Jogador perdeu
-					g.setColor(Color.red);
-					g.drawString("Fim de jogo! A palavra era: " + secretWord, 20, size.height-20);
+					g2d.setColor(Color.red);
+					g2d.drawString("Fim de jogo! A palavra era: " + secretWord, 20, size.height-20);
 				}
 			}
 		}

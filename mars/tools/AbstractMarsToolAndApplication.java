@@ -1,15 +1,47 @@
-   package mars.tools;
-   import javax.swing.*;
-   import javax.swing.border.*;
-   import javax.swing.filechooser.FileFilter;
-   import java.awt.*;
-   import java.awt.event.*;
-   import java.util.*;
-   import java.io.*;
-   import mars.*;
-   import mars.util.*;
-   import mars.tools.*;
-   import mars.mips.hardware.*;
+package mars.tools;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Insets;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.AbstractButton;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileFilter;
+
+import mars.Globals;
+import mars.MIPSprogram;
+import mars.mips.hardware.AccessNotice;
+import mars.mips.hardware.AddressErrorException;
+import mars.mips.hardware.Coprocessor0;
+import mars.mips.hardware.Coprocessor1;
+import mars.mips.hardware.Memory;
+import mars.mips.hardware.Register;
+import mars.mips.hardware.RegisterFile;
+import mars.util.FilenameFinder;
 
 /*
 Copyright (c) 2003-2008,  Pete Sanderson and Kenneth Vollmar
