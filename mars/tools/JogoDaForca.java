@@ -1,17 +1,14 @@
 package mars.tools;
 
 import java.awt.Color;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.GraphicsConfiguration;
 import java.awt.Image;
 import java.util.Observable;
 
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import mars.Globals;
@@ -63,15 +60,17 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	protected Graphics g;
 	private JPanel canvas;
 	protected int lastAddress = -1;
-	protected JLabel label;
-	private Container painel = this.getContentPane();
-	private GraphicsConfiguration gc;
+	// protected JLabel label;
+	// private Container painel = this.getContentPane();
+	// private GraphicsConfiguration gc;
 
-	private int baseAddress;
+	private String baseAddress;
 	private String statusAddress;
+	private String errorsAddress;
 	private String secretWord;
 	private String secretMask;
 	private int statusGame;
+	private String image;
 
 	/**
 	 * Simple constructor, likely used to run a stand-alone memory reference
@@ -146,10 +145,11 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			if (statusGame == CARREGANDO_PALAVRA){
 				loadWordMask(info);
 			}else if (statusGame == JOGO_EM_EXECUCAO){
-				String currentAddress = Integer.toHexString(baseAddress);
-				String end16MSB = currentAddress.substring(0, 4);
-				if (end.substring(0, 4).equals(end16MSB)){
+				//Para escrita no registrador da PIG
+				if (end.substring(0, 4).equals(baseAddress.substring(0, 4))){
 					updateGame(info);
+				}else if (end.equals(errorsAddress)){  //Para escrita no registrador do contador de erros aux
+					System.out.println("test");
 				}
 			}else if (statusGame == FIM_DE_JOGO){
 
@@ -195,7 +195,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 
 	void updateGame(MemoryAccessNotice notice) {
 		int address = notice.getAddress();
-		int offset = address - baseAddress;
+		int offset = address - Integer.parseInt(baseAddress, 16);
 		//Substituir letra na posição
 		char[] arr = secretMask.toCharArray();
 		arr[offset] = secretWord.charAt(offset);
@@ -230,8 +230,9 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	}
 
 	private void updateDefaultAddress() {
-		baseAddress = Memory.dataSegmentBaseAddress;
+		baseAddress = Integer.toHexString(Memory.dataSegmentBaseAddress);
 		statusAddress = "10010500";
+		errorsAddress = "10010600";
 	}
 
 	private JComponent buildGameArea() {

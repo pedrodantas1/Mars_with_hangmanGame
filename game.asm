@@ -15,12 +15,15 @@
 	# Tamanho da palavra = $s5
 	# Status do game = $s4 -> endereço 0x10010500
 	# Contador de erros = $s3
+	# Contador de erros auxiliar para interface = $s2 -> endereço 0x10010600
 	
 .text
 	# Endereço de memoria base para o jogo
 	lui $s0, 0x1000
 	# Endereço de memoria base para o status do game
 	li $s4, 0x10010500
+	# Endereço de memoria base para o contador auxiliar
+	li $s2, 0x10010600
 	
 	# Iniciar contador do tamanho da palavra
 	li $s5, 0
@@ -93,6 +96,7 @@
 			jr $ra
 	
 	# Contador de erros = $s3
+	# Contador de erros auxiliar = $s2
 	iniciar_jogo:
 		# Salvar $ra na pilha
 		addi $sp, $sp, -4
@@ -133,6 +137,8 @@
 			inicio_nao_contem_letra:
 				# Incrementar contador de erros
 				addi $s3, $s3, 1
+				# Atualizar contador auxiliar para refletir na interface
+				sw $s3, 0($s2)
 				# Mensagem de letra errada
 				jal print_nova_linha
 				la $a0, m_letra_errada
