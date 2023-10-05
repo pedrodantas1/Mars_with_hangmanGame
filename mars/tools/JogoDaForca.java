@@ -53,6 +53,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	private static int displayWidth = 650;
 	private static int displayHeight = 350;
 
+	public static final int PRE_GAME = 0;
 	public static final int CARREGANDO_PALAVRA = 1;
 	public static final int JOGO_EM_EXECUCAO = 2;
 	public static final int FIM_DE_JOGO = 3;
@@ -70,7 +71,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	private String secretWord;
 	private String secretMask;
 	private int statusGame;
-	private String image;
+	private String imgForca;
 
 	/**
 	 * Simple constructor, likely used to run a stand-alone memory reference
@@ -149,7 +150,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 				if (end.substring(0, 4).equals(baseAddress.substring(0, 4))){
 					updateGame(info);
 				}else if (end.equals(errorsAddress)){  //Para escrita no registrador do contador de erros aux
-					System.out.println("test");
+					imgForca = "Forca" + value + ".jpg";
 				}
 			}else if (statusGame == FIM_DE_JOGO){
 
@@ -220,12 +221,15 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 
 	protected void initializePostGUI() {
 		updateDefaultAddress();
+		imgForca = "Forca.jpg";
+		statusGame = PRE_GAME;
 	}
 
 	protected void reset() {
 		secretMask = "";
 		secretWord = "";
-		//resetar o background
+		imgForca = "Forca.jpg";
+		statusGame = PRE_GAME;
 		updateDisplay();
 	}
 
@@ -256,7 +260,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 
 		private void paintBackground(Graphics g){
 			System.setProperty("sun.java2d.translaccel", "true");
-			ImageIcon icon = new ImageIcon(getClass().getResource(Globals.imagesPath + "Forca.jpg"));
+			ImageIcon icon = new ImageIcon(getClass().getResource(Globals.imagesPath + imgForca));
 			Image im = icon.getImage();
 			Dimension size = getSize();
 			g.drawImage(im, 0, 0, size.width, size.height, null);
@@ -275,6 +279,17 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 				}
 			}
 			g.drawString(word, (size.width/2)-70, size.height/2);
+			
+			if (statusGame == FIM_DE_JOGO){
+				g.setFont(new Font("Verdana", Font.BOLD, 18));
+				if (secretWord.equals(secretMask)){  //Jogador venceu
+					g.setColor(Color.green);
+					g.drawString("Parabéns! Você acertou a palavra secreta", 20, size.height-20);
+				}else{  //Jogador perdeu
+					g.setColor(Color.red);
+					g.drawString("Fim de jogo! A palavra era: " + secretWord, 20, size.height-20);
+				}
+			}
 		}
 	}
 
