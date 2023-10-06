@@ -1,5 +1,5 @@
 .data
-	m_pede_letra: .asciiz "Digite uma letra = "
+	m_pede_letra: .asciiz "\nDigite uma letra = "
 	m_entrada_invalida: .asciiz "Entrada inválida.\n"
 	m_letra_certa: .asciiz "Muito bem! Letra correta.\n"
 	m_letra_errada: .asciiz "Ops! A palavra não contém essa letra.\n"
@@ -114,8 +114,9 @@
 			beqz $v0, terminador_nulo
 
 			# Se byte lido for \n, verificar se vai ler próxima linha ou se essa é a palavra sorteada
-			lb $t4, 0($t0)         #Byte lido = $t4
-			beq $t4, 10, consumir_linha
+			lb $t4, 0($t0)                # Byte lido = $t4
+			beq $t4, 13, consumir_CR      # Se byte == \r
+			beq $t4, 10, consumir_linha   # Se byte == \n
 
 			# Caso contrário, concatenar byte na linha
 			add $t5, $t1, $t2      # ponteiro para linha = endereço inicial da linha + tamanho atual da linha
@@ -131,6 +132,9 @@
 			add $t5, $t1, $t2
 			sb $zero 0($t5)
 			j fim_ler_palavra
+
+		consumir_CR:
+			j loop_ler_palavra
 
 		consumir_linha:
 			# Colocar \0 no final da linha
@@ -157,19 +161,19 @@
 			move $s5, $t2
 			jr $ra
 
-	carregar_palavra_secreta:
-		lb $t0, 0($s6)
-		beqz $t0, fim_cps
-		# Incrementa tamanho da palavra
-		addi $s5, $s5, 1
-		# Incrementa ponteiro da palavra
-		addi $s6, $s6, 1
+	# carregar_palavra_secreta:
+	# 	lb $t0, 0($s6)
+	# 	beqz $t0, fim_cps
+	# 	# Incrementa tamanho da palavra
+	# 	addi $s5, $s5, 1
+	# 	# Incrementa ponteiro da palavra
+	# 	addi $s6, $s6, 1
 
-		j carregar_palavra_secreta
+	# 	j carregar_palavra_secreta
 
-		fim_cps:
-			sub $s6, $s6, $s5
-			jr $ra
+	# 	fim_cps:
+	# 		sub $s6, $s6, $s5
+	# 		jr $ra
 	
 	criar_mascara_palavra:
 		# Carrega o caractere da posição atual da palavra em $t2
