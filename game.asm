@@ -13,7 +13,7 @@
 	arquivo: .asciiz "palavras.txt"
 	qtd_palavras: .word 4
 	buffer: .space 1
-	linha: .space 64
+	linha: .space 32
 
 	# Variáveis
 	# Palavra secreta = $s6
@@ -103,12 +103,15 @@
 			li $v0, 14
 			syscall			# Byte salvo no endereço armazenado em $t0
 
-			# Parar de ler quando número de bytes lidos for <= 0
-			blez $v0 fim_ler_palavra
+			# Parar de ler quando der erro ($v0 < 0)
+			bltz $v0, fim_ler_palavra
 
-			# Se quantidade de bytes da linha exceder 64, finalizar função
-			slti $t3, $t2, 64
-			beqz $t3, fim_ler_palavra
+			# Se quantidade de bytes da linha exceder 31, finalizar função
+			slti $t3, $t2, 31
+			beqz $t3, terminador_nulo
+
+			# Se chegou no EOF, finalizar função
+			beqz $v0, terminador_nulo
 
 			# Se byte lido for \n, verificar se vai ler próxima linha ou se essa é a palavra sorteada
 			lb $t4, 0($t0)         #Byte lido = $t4
@@ -122,6 +125,12 @@
 			addi $t2, $t2, 1
 
 			j loop_ler_palavra
+		
+		terminador_nulo:
+			# Colocar \0 no final da linha
+			add $t5, $t1, $t2
+			sb $zero 0($t5)
+			j fim_ler_palavra
 
 		consumir_linha:
 			# Colocar \0 no final da linha
@@ -141,6 +150,7 @@
 			li $v0, 16
 			move $a0, $s7
 			syscall
+			# Talvez tratar se execeder o limite de bytes
 			# Copiar palavra para $s6
 			move $s6, $t1
 			# Copiar tamanho da palavra para $s5
