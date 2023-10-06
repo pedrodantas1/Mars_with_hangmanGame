@@ -1,0 +1,6 @@
+uva
+banana
+faca
+manga
+
+analisar letras remanescentes na memoria

@@ -5,9 +5,15 @@
 	m_letra_errada: .asciiz "Ops! A palavra não contém essa letra.\n"
 	m_deu_forca: .asciiz "Que pena! Deu forca e a palavra secreta era: "
 	m_acertou_palavra: .asciiz "Parabéns! Você acertou a palavra secreta.\n"
+	m_erro_abrir_arquivo: .asciiz "\nErro ao abrir arquivo.\n"
+	m_erro_ler_arquivo: .asciiz "\nErro ao ler arquivo.\n"
 	pula_linha: .asciiz "\n"
 
-	palavra_secreta: .asciiz "Estados Unidos"
+	# palavra_secreta: .asciiz "Estados Unidos"
+	arquivo: .asciiz "palavras.txt"
+	qtd_palavras: .word 4
+	buffer: .space 1
+	linha: .space 64
 
 	# Variáveis
 	# Palavra secreta = $s6
@@ -24,13 +30,18 @@
 	li $s4, 0x10010500
 	# Endereço de memoria base para o contador auxiliar
 	li $s2, 0x10010600
-	
-	# Iniciar contador do tamanho da palavra
-	li $s5, 0
 
-	# Carregar palavra secreta
-	la $s6, palavra_secreta
-	jal carregar_palavra_secreta
+	# Carregar palavra secreta pré-definida
+	# la $s6, palavra_secreta
+	# jal carregar_palavra_secreta
+
+	# Carregar palavra secreta aleatória do arquivo
+	jal abrir_arquivo			 # $s7 = file descriptor
+	# Gerar número aleatório (entre 0 e qtd_palavras-1)
+	jal gerar_numero_aleatorio   # $a0 = número aleatório
+	# $s5 = tamanho da palavra
+	# $s6 = palavra secreta
+	jal ler_palavra
 
 	# Flag de carregar palavra
 	li $t1, 1
@@ -53,6 +64,88 @@
 	jal finalizar_jogo
 
 	jal fim_programa
+
+	gerar_numero_aleatorio:
+		li $v0, 42
+		li $a0, 74
+		la $t0, qtd_palavras
+		lw $a1, 0($t0)
+		syscall
+		jr $ra
+
+	abrir_arquivo:
+		li $v0, 13
+		la $a0, arquivo
+		li $a1, 0
+		li $a2, 0
+		syscall
+		bltz $v0, erro_abrir_arquivo
+		move $s7, $v0
+		jr $ra
+	
+	erro_abrir_arquivo:
+		la $a0, m_erro_abrir_arquivo
+		jal print_string
+		j fim_programa
+	
+	ler_palavra:
+		la $t0, buffer
+		la $t1, linha
+		li $t2, 0		# Contador do tamanho da linha = $t2
+		li $t6, 0		# Contador da linha = $t6
+		move $t7, $a0   # Posição da palavra no arquivo = $t7
+
+		loop_ler_palavra:
+			# Comandos para leitura de 1 byte do arquivo
+			move $a0, $s7
+			move $a1, $t0
+			li $a2, 1
+			li $v0, 14
+			syscall			# Byte salvo no endereço armazenado em $t0
+
+			# Parar de ler quando número de bytes lidos for <= 0
+			blez $v0 fim_ler_palavra
+
+			# Se quantidade de bytes da linha exceder 64, finalizar função
+			slti $t3, $t2, 64
+			beqz $t3, fim_ler_palavra
+
+			# Se byte lido for \n, verificar se vai ler próxima linha ou se essa é a palavra sorteada
+			lb $t4, 0($t0)         #Byte lido = $t4
+			beq $t4, 10, consumir_linha
+
+			# Caso contrário, concatenar byte na linha
+			add $t5, $t1, $t2      # ponteiro para linha = endereço inicial da linha + tamanho atual da linha
+			sb $t4, 0($t5)         # Salvar byte na posição do ponteiro
+
+			# Incrementar contador do tamanho da linha
+			addi $t2, $t2, 1
+
+			j loop_ler_palavra
+
+		consumir_linha:
+			# Colocar \0 no final da linha
+			add $t5, $t1, $t2
+			sb $zero 0($t5)
+			# Se for a palavra sorteada, finaliza o laço
+			beq $t6, $t7, fim_ler_palavra
+			# Caso contrário, ler próxima linha
+			# Incrementa contador da linha
+			addi $t6, $t6, 1
+			# Reseta contador do tamanho da linha
+			li $t2, 0
+			j loop_ler_palavra
+
+		fim_ler_palavra:
+			# Fechar arquivo
+			li $v0, 16
+			move $a0, $s7
+			syscall
+			# Copiar palavra para $s6
+			move $s6, $t1
+			# Copiar tamanho da palavra para $s5
+			move $s5, $t2
+			jr $ra
 
 	carregar_palavra_secreta:
 		lb $t0, 0($s6)
@@ -258,13 +351,13 @@
 
 			# Converter para minúsculo se necessário
 			bgt $t3, 90, pula_conversao_2
-			# Caso contrário, converter para minúsculo
+			# Caso contr?rio, converter para minúsculo
 			addi $t3, $t3, 32
 
 			pula_conversao_2:
-			# Se caractere da PIG na posiçao $t4 != '_'
+			# Se caractere da PIG na posição $t4 != '_'
 			bne $t4, 95, continuar_atualizar_PIG
-			# Se caractere digitado != caractere na posicao $t3
+			# Se caractere digitado != caractere na posição $t3
 			bne $t0, $t3, continuar_atualizar_PIG
 
 			# Caso contrário atribuir o caractere digitado em PIG[$t5]
