@@ -9,7 +9,9 @@
 	m_erro_ler_arquivo: .asciiz "\nErro ao ler arquivo.\n"
 	pula_linha: .asciiz "\n"
 
+	# Descomentar próxima linha caso queira uma palavra pré-definida
 	# palavra_secreta: .asciiz "Estados Unidos"
+
 	arquivo: .asciiz "palavras.txt"
 	qtd_palavras: .word 4
 	buffer: .space 1
@@ -24,55 +26,57 @@
 	# Contador de erros auxiliar para interface = $s2 -> endereço 0x10010600
 	
 .text
-	# Endereço de memoria base para o jogo
+	# Endereço de memória base para a palavra in-game
 	lui $s0, 0x1000
-	# Endereço de memoria base para o status do game
+	# Endereço de memória base para o status do game
 	li $s4, 0x10010500
-	# Endereço de memoria base para o contador auxiliar
+	# Endereço de memória base para o contador auxiliar
 	li $s2, 0x10010600
 
+	# Caso queira uma palavra pré-definida: Descomentar este bloco e comentar o bloco seguinte
 	# Carregar palavra secreta pré-definida
 	# la $s6, palavra_secreta
+	# li $s5, 0
 	# jal carregar_palavra_secreta
 
 	# Carregar palavra secreta aleatória do arquivo
-	jal abrir_arquivo			 # $s7 = file descriptor
-	# Gerar número aleatório (entre 0 e qtd_palavras-1)
-	jal gerar_numero_aleatorio   # $a0 = número aleatório
-	# $s5 = tamanho da palavra
-	# $s6 = palavra secreta
+	# 1: Abrir arquivo: Retorna -> Descritor de arquivo = $s7
+	jal abrir_arquivo
+	# 2: Gerar número para definir palavra do jogo -> Número aleatório = $a0
+	jal gerar_numero_aleatorio
+	# 3: Ler palavra do arquivo na posição sorteada -> Tamanho da palavra = $s5; Palavra secreta = $s6
+	# Entradas: $a0, $s7
 	jal ler_palavra
 
 	# Flag de carregar palavra
 	li $t1, 1
 	sw $t1, 0($s4)
-	# Definir lacunas da palavra secreta
-	# Copiar palavra para $t1
+
+	# Copiar palavra secreta para $t1
 	move $t1, $s6
+	# Criar máscara da palavra secreta (lacunas) -> Palavra in-game = $s0
+	# Entradas: $t1, $s0, $s5
 	jal criar_mascara_palavra
 
-	# Iniciar jogo
 	# Flag de inicio de jogo
 	li $t1, 2
 	sw $t1, 0($s4)
+
+	# Loop principal do jogo
 	jal iniciar_jogo
 
-	# Finalizar jogo
 	# Flag de fim de jogo
 	li $t1, 3
 	sw $t1, 0($s4)
+
+	# Operações para quando finalizar o jogo
 	jal finalizar_jogo
 
 	jal fim_programa
 
-	gerar_numero_aleatorio:
-		li $v0, 42
-		li $a0, 74
-		la $t0, qtd_palavras
-		lw $a1, 0($t0)
-		syscall
-		jr $ra
-
+	# Abrir arquivo para leitura
+	# Retorna:
+	#   Descritor de arquivo = $s7
 	abrir_arquivo:
 		li $v0, 13
 		la $a0, arquivo
@@ -83,11 +87,30 @@
 		move $s7, $v0
 		jr $ra
 	
+	# Lidar com erro ao abrir arquivo
 	erro_abrir_arquivo:
 		la $a0, m_erro_abrir_arquivo
 		jal print_string
 		j fim_programa
 	
+	# Gerar número aleatório para definir palavra sorteada
+	# Retorna:
+	#   Número aleatório (0 <= n <= qtd_palavras-1) = $a0
+	gerar_numero_aleatorio:
+		li $v0, 42
+		li $a0, 74
+		la $t0, qtd_palavras
+		lw $a1, 0($t0)
+		syscall
+		jr $ra
+	
+	# Buscar e ler palavra sorteada
+	# Parâmetros:
+	#   Descritor de arquivo = $s7
+	#   Número sorteado = $a0
+	# Retorna:
+	#   Tamanho da palavra = $s5
+	#   Palavra secreta = $s6
 	ler_palavra:
 		la $t0, buffer
 		la $t1, linha
@@ -104,7 +127,7 @@
 			syscall			# Byte salvo no endereço armazenado em $t0
 
 			# Parar de ler quando der erro ($v0 < 0)
-			bltz $v0, fim_ler_palavra
+			bltz $v0, erro_ler_arquivo
 
 			# Se quantidade de bytes da linha exceder 31, finalizar função
 			slti $t3, $t2, 31
@@ -113,67 +136,90 @@
 			# Se chegou no EOF, finalizar função
 			beqz $v0, terminador_nulo
 
-			# Se byte lido for \n, verificar se vai ler próxima linha ou se essa é a palavra sorteada
+			# Ler próximo byte
 			lb $t4, 0($t0)                # Byte lido = $t4
-			beq $t4, 13, consumir_CR      # Se byte == \r
-			beq $t4, 10, consumir_linha   # Se byte == \n
+			# Se byte == \r, consumí-lo e voltar ao início do loop
+			beq $t4, 13, consumir_CR
+			# Se byte == \n, fazer verificações
+			beq $t4, 10, consumir_linha
 
 			# Caso contrário, concatenar byte na linha
-			add $t5, $t1, $t2      # ponteiro para linha = endereço inicial da linha + tamanho atual da linha
+			add $t5, $t1, $t2      # Ponteiro para linha = endereço inicial da linha + tamanho atual da linha
 			sb $t4, 0($t5)         # Salvar byte na posição do ponteiro
 
 			# Incrementar contador do tamanho da linha
 			addi $t2, $t2, 1
 
 			j loop_ler_palavra
+
+		# Lidar com erro ao ler arquivo
+		erro_ler_arquivo:
+			la $a0, m_erro_ler_arquivo
+			jal print_string
+			j fim_programa
 		
+		# Colocar \0 no final da linha
 		terminador_nulo:
-			# Colocar \0 no final da linha
 			add $t5, $t1, $t2
 			sb $zero 0($t5)
 			j fim_ler_palavra
 
+		# Apenas consumir o CR, caso exista
 		consumir_CR:
 			j loop_ler_palavra
 
+		# Operações para quando chegar no final da linha
 		consumir_linha:
 			# Colocar \0 no final da linha
-			add $t5, $t1, $t2
+			add $t5, $t1, $t2    # Posicionar ponteiro no fim da string
 			sb $zero 0($t5)
+
 			# Se for a palavra sorteada, finaliza o laço
 			beq $t6, $t7, fim_ler_palavra
+
 			# Caso contrário, ler próxima linha
-			# Incrementa contador da linha
-			addi $t6, $t6, 1
-			# Reseta contador do tamanho da linha
-			li $t2, 0
+			addi $t6, $t6, 1    # Incrementa contador da linha
+			li $t2, 0           # Reseta contador do tamanho da linha
+
 			j loop_ler_palavra
 
-		fim_ler_palavra:
-			# Fechar arquivo
-			li $v0, 16
-			move $a0, $s7
-			syscall
-			# Talvez tratar se execeder o limite de bytes
-			# Copiar palavra para $s6
-			move $s6, $t1
-			# Copiar tamanho da palavra para $s5
-			move $s5, $t2
-			jr $ra
+	# Operações para finalizar a função
+	fim_ler_palavra:
+		# Fechar arquivo
+		li $v0, 16
+		move $a0, $s7
+		syscall
 
-	# carregar_palavra_secreta:
-	# 	lb $t0, 0($s6)
-	# 	beqz $t0, fim_cps
-	# 	# Incrementa tamanho da palavra
-	# 	addi $s5, $s5, 1
-	# 	# Incrementa ponteiro da palavra
-	# 	addi $s6, $s6, 1
+		# Copiar palavra para $s6
+		move $s6, $t1
 
-	# 	j carregar_palavra_secreta
+		# Copiar tamanho da palavra para $s5
+		move $s5, $t2
 
-	# 	fim_cps:
-	# 		sub $s6, $s6, $s5
-	# 		jr $ra
+		jr $ra
+
+	# Carregar palavra secreta pré-definida (opcional)
+	# Parâmetros:
+	#   Palavra secreta = $s6
+	# Retorna:
+	#   Tamanho da palavra = $s5
+	carregar_palavra_secreta:
+		lb $t0, 0($s6)
+		beqz $t0, fim_cps
+
+		# Incrementa tamanho da palavra
+		addi $s5, $s5, 1
+
+		# Incrementa ponteiro da palavra
+		addi $s6, $s6, 1
+
+		j carregar_palavra_secreta
+
+	# Finalizar função
+	fim_cps:
+		# Reseta ponteiro $s6 para o endereço original
+		sub $s6, $s6, $s5
+		jr $ra
 	
 	criar_mascara_palavra:
 		# Carrega o caractere da posição atual da palavra em $t2
@@ -250,7 +296,6 @@
 				jal print_nova_linha
 				la $a0, m_letra_errada
 				jal print_string
-				# Atualizar boneco da forca
 
 				j final_bloco
 
