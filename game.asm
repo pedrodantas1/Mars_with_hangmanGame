@@ -525,11 +525,3 @@
 		li $v0, 12
 		syscall
 		jr $ra
-
-	# Printar caractere na linha de comando
-	# Parâmetros:
-	#   Caractere a ser printado = $a0
-	print_caractere:
-		li $v0, 11
-		syscall
-		jr $ra
