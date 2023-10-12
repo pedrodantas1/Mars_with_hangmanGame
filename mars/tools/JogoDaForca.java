@@ -7,10 +7,14 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Observable;
 
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import mars.Globals;
@@ -111,6 +115,41 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	 */
 	public String getName() {
 		return "Jogo da Forca";
+	}
+
+	protected JComponent getHelpComponent() {
+		final String helpContent = 
+			"Para rodar o app corretamente é necessário abrir o arquivo .jar por\n" +
+			"alguma linha de comando da sua preferência.\n" +
+			"Para isso, primeiro você deve acessar a pasta onde se encontra o arquivo\n" +
+			"pela linha de comando usando o comando \"cd caminho_da_pasta\" sem as aspas.\n" +
+			"Logo após isso, execute o comando \"java -jar JogoDaForca.jar\".\n" +
+			"Depois que o app for aberto clique no botão \"Open MIPS program e\"\n" +
+			"selecione o arquivo \"game.asm\" que carrega o código assembly do jogo.\n" +
+			"Agora é só iniciar o jogo clicando no botão \"Assemble and run\" e seguir\n" +
+			"os comandos que aparecerem na linha de comando para dar continuidade\n" +
+			"ao jogo.\n\n" +
+			"Caso queira editar as palavras que fazem parte do banco de dados do\n" +
+			"jogo é necessário editar o arquivo \"palavras.txt\".\n" +
+			"Você pode remover as palavras existentes ou adicionar as palavras da sua\n" +
+			"preferência, sendo cada palavra em uma linha e respeitando o limite\n" +
+			"de 31 caracteres por palavra. Também é preciso alterar a variável\n" +
+			"'qtd_palavras' que fica logo no início do arquivo \"game.asm\" e colocar\n" +
+			"o valor correspondente ao número atual de palavras (ou linhas) existentes\n" +
+			"no arquivo \"palavras.txt\". Lembre de salvar os arquivos.\n" +
+			"Espero que você se divirta muito com este jogo que, apesar de desenvolvido\n" +
+			"com simplicidade, foi criado para relembrar os velhos tempos.\n\n" +
+			">> Programa desenvolvido para um trabalho da disciplina de Organização e\n" +
+			"Arquitetura de Computadores da Universidade Federal de Sergipe (UFS/DSI).\n";
+		JButton help = new JButton("Help");
+		help.addActionListener(
+			new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					JOptionPane.showMessageDialog(theWindow, helpContent);
+				}
+			}
+		);
+		return help;  
 	}
 
 	/**
