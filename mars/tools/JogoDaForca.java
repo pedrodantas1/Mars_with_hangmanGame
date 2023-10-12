@@ -47,7 +47,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /**
- * O jogo da forca do MarsTools!
+ * Implementação do jogo da forca usando o MARS para rodar algoritmo
+ * base do jogo construído em assembly MIPS.
  */
 public class JogoDaForca extends AbstractMarsToolAndApplication {
 	private static String heading = "Jogo da Forca";
@@ -124,6 +125,12 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 		return main;
 	}
 
+	/**
+	 * Método sobrecarregado que detecta as instruções de leitura e escrita em
+	 * registradores. Realiza toda a lógica de atualização da interface de
+	 * acordo com os comando executados em registradores nos endereços
+	 * pré-definidos.
+	 */
 	protected void processMIPSUpdate(Observable resource, AccessNotice notice) {
 		if (!notice.accessIsFromMIPS())
 			return;
@@ -144,12 +151,10 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			}else if (statusGame == JOGO_EM_EXECUCAO){
 				//Para escrita no registrador da PIG
 				if (end.substring(0, 4).equals(baseAddress.substring(0, 4))){
-					updateGame(info);
-				}else if (end.equals(errorsAddress)){  //Para escrita no registrador do contador de erros aux
+					updateSecretMask(info);
+				}else if (end.equals(errorsAddress)){  //Para escrita no registrador do contador de erros auxiliar
 					imgForca = "Forca" + value + ".jpg";
 				}
-			}else if (statusGame == FIM_DE_JOGO){
-
 			}
 		}else{  //Para comando de leitura em registrador
 			if (statusGame == CARREGANDO_PALAVRA){
@@ -158,16 +163,23 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 		}
 	}
 
-	void updateGameStatus(int value){
+	/**
+	 * Atualizar o status do game para auxiliar na construção da interface.
+	 * 
+	 * @param value Flag de status atual do game.
+	 */
+	private void updateGameStatus(int value){
 		if (value != CARREGANDO_PALAVRA && value != JOGO_EM_EXECUCAO && value != FIM_DE_JOGO)
 			return;
 		statusGame = value;
 	}
 
 	/**
-	 * Carregar máscara da palavra secreta quando inicia o jogo
+	 * Carregar máscara da palavra secreta quando inicia o jogo.
+	 * 
+	 * @param notice Informações sobre a instrução executada.
 	 */
-	void loadWordMask(MemoryAccessNotice notice) {
+	private void loadWordMask(MemoryAccessNotice notice) {
 		if (secretMask == null){
 			secretMask = "";
 		}
@@ -178,9 +190,11 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	}
 
 	/**
-	 * Carregar palavra secreta quando inicia o jogo
+	 * Carregar palavra secreta quando inicia o jogo.
+	 * 
+	 * @param notice Informações sobre a instrução executada.
 	 */
-	void loadSecretWord(MemoryAccessNotice notice) {
+	private void loadSecretWord(MemoryAccessNotice notice) {
 		if (secretWord == null){
 			secretWord = "";
 		}
@@ -190,7 +204,12 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 		}
 	}
 
-	void updateGame(MemoryAccessNotice notice) {
+	/**
+	 * Atualizar máscara da palavra secreta com as letras correspondentes.
+	 * 
+	 * @param notice Informações sobre a instrução executada.
+	 */
+	private void updateSecretMask(MemoryAccessNotice notice) {
 		int address = notice.getAddress();
 		int offset = address - Integer.parseInt(baseAddress, 16);
 		//Substituir letra na posição
@@ -199,12 +218,38 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 		secretMask = new String(arr);
 	}
 
+	/**
+	 * Definir endereços base para funcionamento do jogo.
+	 */
+	private void setDefaultAddresses() {
+		baseAddress = Integer.toHexString(Memory.dataSegmentBaseAddress);
+		statusAddress = "10010500";
+		errorsAddress = "10010600";
+	}
+
+	/**
+	 * Construir área de gráficos destinada ao jogo.
+	 */
+	private JComponent buildGameArea() {
+		canvas = new GraphicsPanel();
+		canvas.setPreferredSize(getDisplayAreaDimension());
+		return canvas;
+	}
+
+	/**
+	 * 
+	 * @return Dimension do tamanho do display pré-definido.
+	 */
+	private Dimension getDisplayAreaDimension() {
+		return new Dimension(displayWidth, displayHeight);
+	}
+
 	protected void updateDisplay() {
 		canvas.repaint();
 	}
 
 	protected void initializePostGUI() {
-		updateDefaultAddress();
+		setDefaultAddresses();
 		imgForca = "Forca.jpg";
 		statusGame = PRE_GAME;
 	}
@@ -217,22 +262,9 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 		updateDisplay();
 	}
 
-	private void updateDefaultAddress() {
-		baseAddress = Integer.toHexString(Memory.dataSegmentBaseAddress);
-		statusAddress = "10010500";
-		errorsAddress = "10010600";
-	}
-
-	private JComponent buildGameArea() {
-		canvas = new GraphicsPanel();
-		canvas.setPreferredSize(getDisplayAreaDimension());
-		return canvas;
-	}
-
-	private Dimension getDisplayAreaDimension() {
-		return new Dimension(displayWidth, displayHeight);
-	}
-
+	/**
+	 * Classe privada para representar a parte gráfica do jogo.
+	 */
 	private class GraphicsPanel extends JPanel {
 		public void paint(Graphics g) {
 			var g2d = (Graphics2D) g;
@@ -275,11 +307,13 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 				g2d.setFont(new Font("Verdana", Font.BOLD, 18));
 				if (secretWord.equals(secretMask)){  //Jogador venceu
 					g2d.setColor(Color.green);
-					g2d.drawString("Parabéns! Você acertou a palavra secreta", 20, size.height-20);
+					g2d.drawString("Parabéns! Você acertou a palavra secreta", 20, size.height-50);
 				}else{  //Jogador perdeu
 					g2d.setColor(Color.red);
-					g2d.drawString("Fim de jogo! A palavra era: " + secretWord, 20, size.height-20);
+					g2d.drawString("Fim de jogo! A palavra era: " + secretWord, 20, size.height-50);
 				}
+				g2d.setFont(new Font("Verdana", Font.BOLD, 14));
+				g2d.drawString("Aperte em stop, reset e depois em assemble and run para jogar novamente.", 20, size.height-20);
 			}
 		}
 	}
