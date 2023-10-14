@@ -3,6 +3,7 @@ package mars.tools;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -351,13 +352,26 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 				}
 			}
 			
-			int posX = (size.width/2)-100;
+			FontMetrics fm = g2d.getFontMetrics(font);
+			int largura = fm.stringWidth(word);
+			int posX = (size.width/2)-(largura/2);
 			int posY = size.height/2;
 			if (word.length() <= 32){
-				g2d.drawString(word, posX, posY);
+				int offset = 40;
+				if (word.length() > 24)
+					offset = 70;
+				g2d.drawString(word, posX+offset, posY);
 			}else{
-				g2d.drawString(word.substring(0,32), posX, posY);
-				g2d.drawString(word.substring(32), posX, posY+50);
+				String firstLine = word.substring(0,32);
+				String secondLine = word.substring(32);
+
+				largura = fm.stringWidth(firstLine);
+				posX = (size.width/2)-(largura/2)+70;
+				g2d.drawString(firstLine, posX, posY);
+
+				largura = fm.stringWidth(secondLine);
+				posX = (size.width/2)-(largura/2)+70;
+				g2d.drawString(secondLine, posX, posY+50);
 			}
 			
 			if (statusGame == FIM_DE_JOGO){
