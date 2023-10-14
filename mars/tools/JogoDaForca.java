@@ -77,46 +77,41 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	private int statusGame;
 
 	/**
-	 * Simple constructor, likely used to run a stand-alone memory reference
-	 * visualizer.
+	 * Construtor básico.
 	 * 
-	 * @param title   String containing title for title bar
-	 * @param heading String containing text for heading shown in upper part of
-	 *                window.
+	 * @param title   String contendo o título da janela.
+	 * @param heading String contendo o texto a ser mostrado no header do app.
 	 */
 	public JogoDaForca(String title, String heading) {
 		super(title, heading);
 	}
 
 	/**
-	 * Simple constructor, likely used by the MARS Tools menu mechanism
+	 * Construtor básico com título e header pré-definidos.
 	 */
 	public JogoDaForca() {
 		super(heading + version, heading);
 	}
 
 	/**
-	 * Main provided for pure stand-alone use. Recommended stand-alone use is to
-	 * write a
-	 * driver program that instantiates a MemoryReferenceVisualization object then
-	 * invokes its go() method.
-	 * "stand-alone" means it is not invoked from the MARS Tools menu. "Pure" means
-	 * there
-	 * is no driver program to invoke the application.
+	 * Função de inicialização do app stand-alone.
 	 */
 	public static void main(String[] args) {
 		new JogoDaForca(heading + version, heading).go();
 	}
 
 	/**
-	 * Required method to return Tool name.
+	 * Método para retornar o nome do app.
 	 * 
-	 * @return Tool name. MARS will display this in menu item.
+	 * @return Nome do app a ser mostrado na barra de tools do mars padrão.
 	 */
 	public String getName() {
 		return "Jogo da Forca";
 	}
 
+	/**
+	 * Janela de ajuda que é aberta ao clicar no botão help.
+	 */
 	protected JComponent getHelpComponent() {
 		final String helpContent = 
 			"Para rodar o app corretamente é necessário abrir o arquivo .jar por\n" +
@@ -149,14 +144,12 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 				}
 			}
 		);
-		return help;  
+		return help;
 	}
 
 	/**
-	 * Implementation of the inherited abstract method to build the main
-	 * display area of the GUI. It will be placed in the CENTER area of a
-	 * BorderLayout. The title is in the NORTH area, and the controls are
-	 * in the SOUTH area.
+	 * Método para construir a estrutura central da janela. Será posicionada
+	 * no centro, sendo que o título ficará em cima e os controles em baixo.
 	 */
 	protected JComponent buildMainDisplayArea() {
 		JPanel main = new JPanel();
@@ -276,6 +269,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	}
 
 	/**
+	 * Retornar um objeto Dimension com o tamanho da janela definido.
 	 * 
 	 * @return Dimension do tamanho do display pré-definido.
 	 */
@@ -283,16 +277,25 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 		return new Dimension(displayWidth, displayHeight);
 	}
 
+	/**
+	 * Atualizar a janela após a execução de cada instrução do programa MIPS.
+	 */
 	protected void updateDisplay() {
 		canvas.repaint();
 	}
 
+	/**
+	 * Inicializar variáveis após a construção da interface principal.
+	 */
 	protected void initializePostGUI() {
 		setDefaultAddresses();
 		imgForca = "Forca.jpg";
 		statusGame = PRE_GAME;
 	}
 
+	/**
+	 * Método para resetar estruturas do app. É chamado ao clicar no botão reset.
+	 */
 	protected void reset() {
 		secretMask = "";
 		secretWord = "";
@@ -314,13 +317,16 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 					RenderingHints.VALUE_RENDER_QUALITY);
 			g2d.setRenderingHints(rh);
 
-			//Desenhar background do jogo
 			paintBackground(g2d);
-			//Desenhar textos do jogo
 			if (secretMask != null)
 				paintText(g2d);
 		}
 
+		/**
+		 * Método para pintar a imagem de fundo do game.
+		 * 
+		 * @param g2d Objeto de configuração de gráficos.
+		 */
 		private void paintBackground(Graphics2D g2d){
 			System.setProperty("sun.java2d.translaccel", "true");
 			Image img = new ImageIcon(getClass().getResource(Globals.imagesPath + imgForca)).getImage();
@@ -328,6 +334,11 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			g2d.drawImage(img, 0, 0, size.width, size.height, null);
 		}
 
+		/**
+		 * Método para desenhar os textos do app.
+		 * 
+		 * @param g2d Objeto de configuração de gráficos.
+		 */
 		private void paintText(Graphics2D g2d){
 			Dimension size = getSize();
 			Font font = new Font("Verdana", Font.BOLD, 24);
@@ -356,5 +367,4 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			}
 		}
 	}
-
 }
