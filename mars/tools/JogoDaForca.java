@@ -350,7 +350,15 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 					word += " ";
 				}
 			}
-			g2d.drawString(word, (size.width/2)-70, size.height/2);
+			
+			int posX = (size.width/2)-100;
+			int posY = size.height/2;
+			if (word.length() <= 32){
+				g2d.drawString(word, posX, posY);
+			}else{
+				g2d.drawString(word.substring(0,32), posX, posY);
+				g2d.drawString(word.substring(32), posX, posY+50);
+			}
 			
 			if (statusGame == FIM_DE_JOGO){
 				g2d.setFont(new Font("Verdana", Font.BOLD, 18));
