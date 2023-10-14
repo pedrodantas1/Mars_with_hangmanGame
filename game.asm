@@ -7,16 +7,17 @@
 	m_acertou_palavra: .asciiz "Parabéns! Você acertou a palavra secreta.\n"
 	m_erro_abrir_arquivo: .asciiz "\nErro ao abrir arquivo.\n"
 	m_erro_ler_arquivo: .asciiz "\nErro ao ler arquivo.\n"
+	m_erro_tamanho_excedido: .asciiz "\nErro: Tamanho da palavra excedeu 31 caracteres.\n"
 	pula_linha: .asciiz "\n"
 
 	# Descomentar 'palavra_secreta' caso queira uma palavra pré-definida
 	# Lembrar de descomentar o bloco relacionado na main
-	# palavra_secreta: .asciiz "Estados Unidos"
+	# palavra_secreta: .asciiz "pneumoultramicroscopicossilicovulcanoconiose"
 
 	# Arquivo com as palavras do jogo
 	arquivo: .asciiz "palavras.txt"
 	# Número de palavras dentro do arquivo
-	qtd_palavras: .word 3
+	qtd_palavras: .word 4
 	# Buffer para armazenar caractere lido no arquivo
 	buffer: .space 1
 	# Buffer para armazenar cada linha do arquivo
@@ -136,9 +137,9 @@
 			# Parar de ler quando der erro ($v0 < 0)
 			bltz $v0, erro_ler_arquivo
 
-			# Se quantidade de bytes da linha exceder 31 -> finalizar função
+			# Se quantidade de bytes da linha exceder 31 -> lançar erro e finalizar função
 			slti $t3, $t2, 31
-			beqz $t3, terminador_nulo
+			beqz $t3, erro_tamanho_excedido
 
 			# Se chegou no EOF -> finalizar função
 			beqz $v0, terminador_nulo
@@ -150,7 +151,7 @@
 			# Se byte == \n -> fazer verificações
 			beq $t4, 10, consumir_linha
 
-			# Caso contrário, concatenar byte na linha
+			# Caso contrário -> concatenar byte na linha
 			add $t5, $t1, $t2      # Ponteiro para linha = endereço inicial da linha + tamanho atual da linha
 			sb $t4, 0($t5)         # Salvar byte na posição do ponteiro
 
@@ -182,9 +183,9 @@
 			sb $zero 0($t5)
 
 			# Se for a palavra sorteada -> finalizar laço
-			beq $t6, $t7, fim_ler_palavra
+			beq $t6, $t7, fim_ler_palavra    # Se contador da linha == numero sorteado
 
-			# Caso contrário, ler próxima linha
+			# Caso contrário -> ler próxima linha
 			addi $t6, $t6, 1    # Incrementa contador da linha
 			li $t2, 0           # Reseta contador do tamanho da linha
 
@@ -210,26 +211,40 @@
 	#   Palavra secreta = $s6
 	# Modifica:
 	#   Tamanho da palavra = $s5
+	#   Palavra secreta = $s6
 	carregar_palavra_secreta:
-		# Ler caractere da palavra secreta
-		lb $t0, 0($s6)
-		# Se chegar no final da palavra -> finalizar função
-		beqz $t0, fim_cps
+		# Ponteiro para varrer a palavra secreta
+		move $t3, $s6
 
-		# Incrementa tamanho da palavra
-		addi $s5, $s5, 1
+		loop_cps:
+			# Ler caractere da palavra secreta
+			lb $t0, 0($t3)
 
-		# Incrementa ponteiro da palavra
-		addi $s6, $s6, 1
+			# Se quantidade de bytes da linha exceder 31 -> lançar erro e finalizar função
+			slti $t1, $s5, 31
+			beqz $t1, erro_tamanho_excedido
 
-		j carregar_palavra_secreta
+			# Se chegar no final da palavra -> finalizar função
+			beqz $t0, fim_cps
+
+			# Incrementa tamanho da palavra
+			addi $s5, $s5, 1
+
+			# Incrementa ponteiro da palavra
+			addi $t3, $t3, 1
+
+			j loop_cps
 
 	# Finalizar função
 	fim_cps:
-		# Reseta ponteiro $s6 para o endereço original
-		sub $s6, $s6, $s5
 		jr $ra
-	
+
+	# Lidar com erro de tamanho da palavra que excedeu 31 caracteres
+	erro_tamanho_excedido:
+		la $a0, m_erro_tamanho_excedido
+		jal print_string
+		j fim_programa
+
 	# Criar máscara da PIG (lacunas)
 	# Parâmetros:
 	#   Palavra secreta = $t1
@@ -395,7 +410,7 @@
 		blt $t0, 65, fim_conversao
 		bgt $t0, 90, fim_conversao
 
-		# Caso contrário, converter para minúsculo
+		# Caso contrário -> converter para minúsculo
 		addi $t0, $t0, 32
 
 		fim_conversao:
