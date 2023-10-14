@@ -174,7 +174,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			String end = Integer.toHexString(address);
 			//Se atualizar status no endereço designado
 			if (end.equals(statusAddress)){
-				updateGameStatus(value);
+				setGameStatus(value);
 				return;
 			}
 			//Executar comando de acordo com o status do jogo
@@ -196,13 +196,17 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	}
 
 	/**
-	 * Atualizar o status do game para auxiliar na construção da interface.
+	 * Definir o status do game para auxiliar na construção da interface.
 	 * 
 	 * @param value Flag de status atual do game.
 	 */
-	private void updateGameStatus(int value){
-		if (value != CARREGANDO_PALAVRA && value != JOGO_EM_EXECUCAO && value != FIM_DE_JOGO)
+	private void setGameStatus(int value){
+		if (value != PRE_GAME &&
+			value != CARREGANDO_PALAVRA &&
+			value != JOGO_EM_EXECUCAO &&
+			value != FIM_DE_JOGO)
 			return;
+
 		statusGame = value;
 	}
 
@@ -289,8 +293,8 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 	 */
 	protected void initializePostGUI() {
 		setDefaultAddresses();
+		setGameStatus(PRE_GAME);
 		imgForca = "Forca.jpg";
-		statusGame = PRE_GAME;
 	}
 
 	/**
@@ -344,6 +348,8 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 			Font font = new Font("Verdana", Font.BOLD, 24);
 			g2d.setFont(font);
 			g2d.setColor(Color.blue);
+
+			//Construir palavra in-game
 			String word = "";
 			for (int i=0; i<secretMask.length(); i++){
 				word += secretMask.charAt(i);
@@ -351,7 +357,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 					word += " ";
 				}
 			}
-			
+			//Desenhar palavra in-game
 			FontMetrics fm = g2d.getFontMetrics(font);
 			int largura = fm.stringWidth(word);
 			int posX = (size.width/2)-(largura/2);
@@ -373,7 +379,7 @@ public class JogoDaForca extends AbstractMarsToolAndApplication {
 				posX = (size.width/2)-(largura/2)+70;
 				g2d.drawString(secondLine, posX, posY+50);
 			}
-			
+			//Aviso ao finalizar o jogo
 			if (statusGame == FIM_DE_JOGO){
 				g2d.setFont(new Font("Verdana", Font.BOLD, 18));
 				if (secretWord.equals(secretMask)){  //Jogador venceu

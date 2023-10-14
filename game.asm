@@ -9,7 +9,8 @@
 	m_erro_ler_arquivo: .asciiz "\nErro ao ler arquivo.\n"
 	pula_linha: .asciiz "\n"
 
-	# Descomentar próxima linha caso queira uma palavra pré-definida
+	# Descomentar 'palavra_secreta' caso queira uma palavra pré-definida
+	# Lembrar de descomentar o bloco relacionado na main
 	# palavra_secreta: .asciiz "Estados Unidos"
 
 	# Arquivo com as palavras do jogo
