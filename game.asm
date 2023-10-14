@@ -15,7 +15,7 @@
 	# Arquivo com as palavras do jogo
 	arquivo: .asciiz "palavras.txt"
 	# Número de palavras dentro do arquivo
-	qtd_palavras: .word 4
+	qtd_palavras: .word 1
 	# Buffer para armazenar caractere lido no arquivo
 	buffer: .space 1
 	# Buffer para armazenar cada linha do arquivo

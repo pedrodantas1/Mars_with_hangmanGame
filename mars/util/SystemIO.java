@@ -1,8 +1,15 @@
    package mars.util;
-   import mars.*;
-   import java.io.*;
-   import javax.swing.*;
-   import java.util.*;
+   import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+
+import mars.Globals;
+import mars.Settings;
 	
 	/*
 Copyright (c) 2003-2013,  Pete Sanderson and Kenneth Vollmar
@@ -262,15 +269,22 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
          // The whole try-catch is not really necessary in this case since I'm
       	// just propagating the runtime exception (the default behavior), but 
       	// I want to make it explicit.  The client needs to catch it.
-         try
-         {
-            returnValue = (int) (input.charAt(0)); // first character input
-         } 
-             catch (IndexOutOfBoundsException e) // no chars present
-            {
-               throw e;  // was: returnValue = 0;
-            }
-      
+         
+         // try
+         // {
+         //    returnValue = (int) (input.charAt(0)); // first character input
+         // } 
+         // catch (IndexOutOfBoundsException e) // no chars present
+         // {
+         //    throw e;  // was: returnValue = 0;
+         // }
+
+         if (input.isEmpty()){
+            returnValue = 10;
+         }else{
+            returnValue = (int) (input.charAt(0));
+         }
+         
          return returnValue;
       
       }
