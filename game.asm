@@ -211,7 +211,6 @@
 	#   Palavra secreta = $s6
 	# Modifica:
 	#   Tamanho da palavra = $s5
-	#   Palavra secreta = $s6
 	carregar_palavra_secreta:
 		# Ponteiro para varrer a palavra secreta
 		move $t3, $s6
