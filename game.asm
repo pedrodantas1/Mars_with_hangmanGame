@@ -12,7 +12,7 @@
 
 	# Descomentar 'palavra_secreta' caso queira uma palavra pré-definida
 	# Lembrar de descomentar o bloco relacionado na main
-	# palavra_secreta: .asciiz "pneumoultramicroscopicossilicovulcanoconiose"
+	# palavra_secreta: .asciiz "guarda-chuva"
 
 	# Arquivo com as palavras do jogo
 	arquivo: .asciiz "palavras.txt"
@@ -23,7 +23,7 @@
 	# Buffer para armazenar cada linha do arquivo
 	linha: .space 32
 
-	# Variáveis
+	# Variáveis mapeadas para o jogo
 	# Palavra secreta = $s6
 	# Palavra in-game (PIG) = $s0 -> endereço 0x10000000
 	# Tamanho da palavra = $s5
@@ -138,7 +138,7 @@
 			bltz $v0, erro_ler_arquivo
 
 			# Se quantidade de bytes da linha exceder 31 -> lançar erro e finalizar função
-			slti $t3, $t2, 31
+			slti $t3, $t2, 32
 			beqz $t3, erro_tamanho_excedido
 
 			# Se chegou no EOF -> finalizar função
@@ -221,7 +221,7 @@
 			lb $t0, 0($t3)
 
 			# Se quantidade de bytes da linha exceder 31 -> lançar erro e finalizar função
-			slti $t1, $s5, 31
+			slti $t1, $s5, 32
 			beqz $t1, erro_tamanho_excedido
 
 			# Se chegar no final da palavra -> finalizar função
